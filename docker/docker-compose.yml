@@ -134,10 +134,55 @@ services:
       - influxdb
       - metrics-server
     ports:
-      - 3300:${GRAFANA_PORT}
+      - 3001:${GRAFANA_PORT}
     networks:
       metrics:
         ipv4_address: 172.19.1.6
+
+  probe:
+    container_name: mmt-probe
+    image: ghcr.io/montimage/mmt-probe:v1.5.12
+    #image: nicolaka/netshoot
+    command: mmt-probe -i eth0
+    depends_on:
+      - gnb
+    #network_mode: service:gnb #monitor gNB
+    network_mode: service:5gc #monitor 5G core
+    volumes:
+      - mmt-report-storage:/opt/mmt/probe/result/report/online/
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:4.0
+    #ports:
+    #  - 27017:27017
+    volumes:
+      - mongodb-storage:/data/db
+    healthcheck:
+      test: [ "CMD-SHELL", "mongo" ]
+      interval: 3s
+      timeout: 1s
+      retries: 60
+    networks:
+      metrics:
+        ipv4_address: 172.19.1.10
+
+  operator:
+    container_name: mmt-operator
+    image: ghcr.io/montimage/mmt-operator:v1.7.6
+    command: /opt/mmt/operator/bin/www -Xdatabase_server.host=mongodb
+    ports:
+      - 3002:8080/tcp #access to GUI from external via port 3002
+    # wait for mongodb is available
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    # shared volume between mmt-probe and mmt-operator to share CSV reports
+    volumes:
+      - mmt-report-storage:/opt/mmt/probe/result/report/online/
+    networks:
+      metrics:
+        ipv4_address: 172.19.1.11
 
 configs:
   gnb_config.yml:
@@ -147,6 +192,8 @@ volumes:
   gnb-storage:
   grafana-storage:
   influxdb-storage:
+  mongodb-storage:
+  mmt-report-storage:
 
 networks:
   ran:
