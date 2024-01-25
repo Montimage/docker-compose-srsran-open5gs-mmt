@@ -22,20 +22,19 @@ version: '3.9'
 
 services:
   5gc:
-    container_name: open5gs_5gc
+    container_name: mi_core
+    image: mi/core
     build:
       context: open5gs
       target: open5gs
       args:
         OS_VERSION: "22.04"
-        OPEN5GS_VERSION: "v2.6.1"
+        OPEN5GS_VERSION: "v2.6.3"
     env_file:
       - ${OPEN_5GS_ENV_FILE:-open5gs/open5gs.env}
     privileged: true
     ports:
       - "3000:3000/tcp"
-    # Uncomment port to use the 5gc from outside the docker network
-    #   - "38412:38412/sctp"
     command: 5gc -c open5gs-5gc.yml
     healthcheck:
       test: [ "CMD-SHELL", "nc -z 127.0.0.20 7777" ]
@@ -47,9 +46,9 @@ services:
         ipv4_address: ${OPEN5GS_IP:-10.53.1.2}
 
   gnb:
-    container_name: srsran_gnb
+    container_name: mi_gnb
     # Build info
-    image: srsran/gnb
+    image: mi/gnb
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -86,11 +85,12 @@ services:
       5gc:
         condition: service_healthy
     # Command to run into the final container
-    command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3} metrics --enable_json_metrics true --addr 172.19.1.4 --port 55555
+    command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3}
+    #command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3} metrics --enable_json_metrics true --addr 172.19.1.4 --port 55555 cell_cfg --plmn 00101
 
   metrics-server:
-    container_name: metrics_server
-    image: srsran/metrics_server
+    container_name: mi_metrics
+    image: mi/metrics_server
     build:
       context: metrics_server
     environment:
@@ -107,7 +107,7 @@ services:
         ipv4_address: 172.19.1.4
 
   influxdb:
-    container_name: influxdb
+    container_name: mi_influxdb
     image: influxdb:${DOCKER_INFLUXDB_VERSION}
     volumes:
       - influxdb-storage:/var/lib/influxdb2:rw
@@ -122,7 +122,7 @@ services:
         ipv4_address: 172.19.1.5
 
   grafana:
-    container_name: grafana
+    container_name: mi_grafana
     image: grafana/grafana-oss:${GRAFANA_VERSION}
     volumes:
       - grafana-storage:/var/lib/grafana:rw
@@ -140,7 +140,7 @@ services:
         ipv4_address: 172.19.1.6
 
   probe:
-    container_name: mmt_probe
+    container_name: mi_probe
     image: ghcr.io/montimage/mmt-probe:v1.5.12
     #image: nicolaka/netshoot
     command: mmt-probe -i eth0
@@ -152,7 +152,7 @@ services:
       - mmt-report-storage:/opt/mmt/probe/result/report/online/
 
   mongodb:
-    container_name: mongodb
+    container_name: mi_db
     image: mongo:4.0
     #ports:
     #  - 27017:27017
@@ -168,7 +168,7 @@ services:
         ipv4_address: 172.19.1.10
 
   operator:
-    container_name: mmt_operator
+    container_name: mi_operator
     image: ghcr.io/montimage/mmt-operator:v1.7.6
     command: /opt/mmt/operator/bin/www -Xdatabase_server.host=mongodb -Xport_number=8080 -Xprobe_analysis_mode=online
     ports:
