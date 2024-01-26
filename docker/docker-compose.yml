@@ -145,23 +145,23 @@ services:
     image: ghcr.io/montimage/mmt-probe:v1.5.12
     #image: nicolaka/netshoot
     # session-report.gtp is for LTE
-    #command: mmt-probe -i eth0 -Xsession-report.gtp=false
-    command: sleep infinity
+    command: mmt-probe -i eth1 -Xsecurity.enable=false
+    #command: sleep infinity
 
     depends_on:
       - gnb
     #network_mode: service:gnb #monitor gNB
-    network_mode: service:5gc #monitor 5G core
+    network_mode: service:gnb #monitor 5G core
     volumes:
-      - mmt-report-storage:/opt/mmt/probe/result/report/online/
+      - mmt-report-storage:/opt/mmt/probe/result/report/online/:rw
 
   mongodb:
     container_name: mi_db
-    image: mongo:4.0
+    image: mongo:4.4
     #ports:
     #  - 27017:27017
     volumes:
-      - mongodb-storage:/data/db
+      - mongodb-storage:/data/db:rw
     healthcheck:
       test: [ "CMD-SHELL", "mongo" ]
       interval: 10s
@@ -183,7 +183,7 @@ services:
         condition: service_healthy
     # shared volume between mmt-probe and mmt-operator to share CSV reports
     volumes:
-      - mmt-report-storage:/opt/mmt/probe/result/report/online/
+      - mmt-report-storage:/opt/mmt/probe/result/report/online/:rw
     networks:
       metrics:
         ipv4_address: 172.19.1.11
