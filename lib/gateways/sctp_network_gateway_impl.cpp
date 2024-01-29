@@ -83,7 +83,7 @@ bool sctp_network_gateway_impl::subscripe_to_events()
 
   if (::setsockopt(sock_fd, IPPROTO_SCTP, SCTP_EVENTS, &events, sizeof(events)) != 0) {
     logger.error("Subscribing to SCTP events failed: {}", strerror(errno));
-    return false;
+    return true;
   }
   return true;
 }
