@@ -34,7 +34,7 @@ services:
       - ${OPEN_5GS_ENV_FILE:-open5gs/open5gs.env}
     privileged: true
     ports:
-      - "3000:3000/tcp"
+      - 127.0.0.1:3000:3000/tcp
     command: 5gc -c open5gs-5gc.yml
     healthcheck:
       test: [ "CMD-SHELL", "nc -z 127.0.0.20 7777" ]
@@ -136,7 +136,7 @@ services:
       - influxdb
       - metrics-server
     ports:
-      - 3001:${GRAFANA_PORT}/tcp
+      - 127.0.0.1:3001:${GRAFANA_PORT}/tcp
     networks:
       metrics:
         ipv4_address: 172.19.1.6
@@ -181,7 +181,7 @@ services:
     image: ghcr.io/montimage/mmt-operator:v1.7.6
     command: /opt/mmt/operator/bin/www -Xdatabase_server.host=mongodb -Xport_number=8080 -Xprobe_analysis_mode=online
     ports:
-      - 3002:8080/tcp #access to GUI from external via port 3002
+      - 127.0.0.1:3002:8080/tcp #access to GUI from external via port 3002
     # wait for mongodb is available
     depends_on:
       mongodb:
