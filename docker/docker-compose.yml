@@ -65,7 +65,7 @@ services:
       - /dev/bus/usb/:/dev/bus/usb/
       # Sharing images between the host and the pod.
       # It's also possible to download the images inside the pod
-      - /usr/share/uhd/images:/usr/share/uhd/images
+      #- /usr/share/uhd/images:/usr/share/uhd/images
       # Save logs and more into gnb-storage
       - gnb-storage:/tmp
     # It creates a file/folder into /config_name inside the container
@@ -88,6 +88,7 @@ services:
     #command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3}
     command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3} metrics --enable_json_metrics true --addr 172.19.1.4 --port 55555 cell_cfg --plmn 00101
     #command: gnb -c /gnb_config.yml amf --addr ${OPEN5GS_IP:-10.53.1.2} --bind_addr ${GNB_IP:-10.53.1.3} metrics --enable_json_metrics true --addr 172.19.1.4 --port 55555 cell_cfg --plmn 99914
+    #command: sleep infinity
 
   metrics-server:
     container_name: mi_metrics
@@ -135,7 +136,7 @@ services:
       - influxdb
       - metrics-server
     ports:
-      - 3001:${GRAFANA_PORT}
+      - 3001:${GRAFANA_PORT}/tcp
     networks:
       metrics:
         ipv4_address: 172.19.1.6
@@ -143,15 +144,15 @@ services:
   probe:
     container_name: mi_probe
     image: ghcr.io/montimage/mmt-probe:v1.5.12
-    #image: nicolaka/netshoot
-    # session-report.gtp is for LTE
     command: mmt-probe -i eth1 -Xsecurity.enable=false
+    #image: nicolaka/netshoot
     #command: sleep infinity
+    #command: ifconfig -a
 
     depends_on:
       - gnb
-    #network_mode: service:gnb #monitor gNB
-    network_mode: service:gnb #monitor 5G core
+    network_mode: service:gnb #monitor gNB
+    #network_mode: service:operator #monitor 5G core
     volumes:
       - mmt-report-storage:/opt/mmt/probe/result/report/online/:rw
 

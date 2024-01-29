@@ -2,3 +2,6 @@
 /.project
 /.externalToolBuilders/
 .DS_Store
+/.cproject
+/.settings/
+/.autotools

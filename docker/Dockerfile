@@ -60,3 +60,4 @@ RUN /usr/local/bin/install_dependencies.sh run && \
 # instead of sharing them with the host (in the docker-compose.yml)
 # RUN uhd_images_downloader -t b2xx && \
 #     uhd_images_downloader -t n300    
+RUN uhd_images_downloader -t b2xx
